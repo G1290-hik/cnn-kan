@@ -10,6 +10,7 @@ function App() {
   const [loading, setLoading] = useState(true); // Start with loading as true
   const [error, setError] = useState(null);
   const [modelLoaded, setModelLoaded] = useState(false); // New state to prevent jitter
+  const [snackbar, setSnackbar] = useState({ show: false, message: '' });
 
   useEffect(() => {
     const initializeModel = async () => {
@@ -37,6 +38,11 @@ function App() {
     if (!modelLoaded) return; // Prevent interactions before model loads
 
     const file = event.target.files[0];
+    if (!file) {
+      setSnackbar({ show: true, message: 'Please select an image to upload' });
+      setTimeout(() => setSnackbar({ show: false, message: '' }), 3000);
+      return;
+    }
     if (!file.type.startsWith('image/')) {
       setError('Please upload an image file');
       return;
@@ -49,7 +55,7 @@ function App() {
       const img = new Image();
       img.src = imageUrl;
       img.onload = () => {
-        handlePrediction(model, img, setPredictions)
+        handlePrediction(model, img, setPredictions, labels)
           .catch(err => setError(err.message));
         URL.revokeObjectURL(imageUrl);
       };
@@ -74,6 +80,17 @@ function App() {
           <div className="image-container">
             {images.map((url, index) => (
               <div key={index} className="image-box">
+                <div className="image-header">
+                  <button 
+                    className="remove-button"
+                    onClick={() => {
+                      setImages(images.filter((_, i) => i !== index));
+                      setPredictions(predictions.filter((_, i) => i !== index));
+                    }}
+                  >
+                    ×
+                  </button>
+                </div>
                 <img src={url} alt="uploaded" className="uploaded-image" />
                 {predictions[index] && <p className="prediction-text">{predictions[index]}</p>}
               </div>
@@ -84,6 +101,12 @@ function App() {
             <input type="file" accept="image/*" onChange={handleImageUpload} className="file-input" />
           </div>
         </>
+      )}
+
+      {snackbar.show && (
+        <div className="snackbar">
+          {snackbar.message}
+        </div>
       )}
     </div>
   );

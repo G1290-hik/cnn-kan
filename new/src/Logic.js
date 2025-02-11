@@ -27,7 +27,7 @@ export const loadModelAndLabels = async () => {
   }
 };
 
-export const handlePrediction = async (model, img, setPredictions) => {
+export const handlePrediction = async (model, img, setPredictions, labels) => {
   try {
     const tensor = tf.browser
       .fromPixels(img)
@@ -43,8 +43,8 @@ export const handlePrediction = async (model, img, setPredictions) => {
     // Get top prediction index
     const topIndex = predictionsData.indexOf(Math.max(...predictionsData));
 
-    // Get label if available
-    const label = `Class ${topIndex}`; // Fallback if labels aren't available
+    // Get actual label from the labels object
+    const label = labels[topIndex]?.replace(/'/g, '').split(',')[0] || `Class ${topIndex}`;
     setPredictions((prevPredictions) => [...prevPredictions, `This appears to be a ${label}`]);
 
     // Clean up tensor memory
